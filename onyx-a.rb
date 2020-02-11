@@ -36,6 +36,7 @@ PREC_OR = {
 
 PREC_SEPARATOR = {
     :right => [
+        [[/\G,/,], -> (l, r) { -> (s) { [l.(s), r.(s)] } }],
         [[/\G;/,], -> (l, r) { -> (s) { l.(s); r.(s) } }],
     ]
 }
@@ -71,7 +72,6 @@ end
 
 module ExpressionParser
     def p_expr(node)
-        return p_literal if node == :literal
         jump
         start = @index
         old_node = @node
@@ -81,36 +81,21 @@ module ExpressionParser
             @node = old_node
             return result
         end
-        result = p_hat
+        result = node == :literal ? p_literal : p_hat
         @cache[[start,node,:expr]] = result, @index
         @node = old_node
         result
     end
     
-    def p_literal
-        cache1 = @cache[@index] ||= {}
-        # p @cache, @index
-        cache2 = cache1[nil] ||= {}
-        lit, index = cache2[:literal]
-        (@index = index; return lit) if lit
-        return unless lit = literal
-        cache2[:literal] = lit, @index
-        return lit
-    end
-    
-    def index
-        @index
-    end
+    def p_literal; literal end
     
     def op(key, hole: :none)
         return p_literal if @node == :literal
         ops = @node[key]
         return unless ops
-        cache1 = @cache[@index] ||= {}
-        cache2 = cache1[ops] ||= {}
         start = @index
         ops.lazy.each {|op, create_lambda|
-            cached, @index = cache2[op]
+            cached, @index = @cache[[start, ops, op]]
             return cached if cached
             @index = start
             ope = eat(op[0])
@@ -131,7 +116,7 @@ module ExpressionParser
             else
                 create_lambda.(*exprs)
             end
-            cache2[op] = result, @index
+            @cache[[start, ops, op]] = result, @index
             return result
         }
         @index = start
