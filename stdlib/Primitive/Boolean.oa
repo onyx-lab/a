@@ -1,0 +1,11 @@
+module Primitive.Boolean has (
+    Boolean
+) where (
+import Data.Show;
+import Primitive.String;
+
+Show for Boolean = (
+    show True = 'True';
+    show False = 'False'
+)
+)

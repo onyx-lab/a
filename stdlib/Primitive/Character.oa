@@ -1,0 +1,10 @@
+module Primitive.Character has (
+    Character
+) where (
+import Data.Show;
+import recursive Primitive.String;
+
+Show for Character = (
+    show c = c :: nil
+)
+)

@@ -1,0 +1,13 @@
+module Iterable.Range has (
+    String
+) where (
+import Data.Iterable;
+
+data Range of start : a, end : a;
+
+Iterable for Integer, Range = (
+    _@_ range n where n < 0 = Error 'Iterable.Range _@_ index too low';
+    _@_ range n where n >= (end range - start range) = Error 'Iterable.Range _@_ index too high';
+    _@_ range n = start range + n
+);
+)

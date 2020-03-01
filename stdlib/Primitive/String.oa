@@ -1,0 +1,24 @@
+module Primitive.String has (
+    String
+) where (
+import Data.Show;
+import recursive Primitive.Character;
+
+#-- TODO: bad idea inefficient
+
+data String = String of (List of Character);
+
+(::) : Character -> String -> String;
+c :: String of cs = String of (c::cs); 
+
+_showInner : List of Char -> String;
+_showInner [] = String of '';
+_showInner "'"::tail = '\\\'' ++ _showInner tail;
+_showInner "\n"::tail = '\\n' ++ _showInner tail;
+_showInner "\t"::tail = '\\t' ++ _showInner tail;
+_showInner c::tail = c :: _showInner tail;
+
+instance Show for String where (
+    show (String of cs) = '\'' ++ _showInner cs ++ '\''
+);
+)

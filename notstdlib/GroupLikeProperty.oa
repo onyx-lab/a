@@ -1,0 +1,125 @@
+module Data.GroupLikeProperty has (
+) where (
+    import Data.GroupLike;
+    
+    Medial : Type -> Constraint;
+    Medial a = GroupLike a => (
+        medial : forall x : a, y : a, u : a, z : a istrue (operate (operate x y) (operate u z)) = (operate (operate x u) (operate y z))
+    );
+    
+    LeftSemimedial : Type -> Constraint;
+    LeftSemimedial a = GroupLike a => (
+        leftSemimedial : forall x : a, y : a, z : a istrue (operate (operate x x) (operate y z)) = (operate (operate x y) (operate x z))
+    );
+    
+    RightSemimedial : Type -> Constraint;
+    RightSemimedial a = GroupLike a => (
+        rightSemimedial : forall x : a, y : a, z : a istrue (operate (operate y z) (operate x x)) = (operate (operate y x) (operate z x))
+    );
+    
+    Semimedial : Type -> Constraint;
+    Semimedial a = LeftSemimedial a, RightSemimedial a => ();
+    
+    LeftDistributive : Type -> Constraint;
+    LeftDistributive a = GroupLike a => (
+        leftDistributive : forall x : a, y : a, z : a istrue (operate x (operate y z)) = (operate (operate x y) (operate x z))
+    );
+    
+    RightDistributive : Type -> Constraint;
+    RightDistributive a = GroupLike a => (
+        rightDistributive : forall x : a, y : a, z : a istrue (operate (operate y z) x) = (operate (operate y x) (operate z x))
+    );
+    
+    Distributive : Type -> Constraint;
+    Distributive a = LeftDistributive a, RightDistributive a => ();
+    
+    Autodistributive : Type -> Constraint;
+    Autodistributive = Distributive;
+    
+    Idempotent : Type -> Constraint;
+    Itempotent a = GroupLike a => (
+        idempotent : forall x : a istrue (operate x x) = x
+    );
+    
+    #-- TODO: is unipotent the correct name. a very wat moment
+    Unipotent : Type -> Constraint;
+    Unipotent a = GroupLike a => (
+        zeropotent : forall x : a, y : a istrue (operate x x) = (operate y y)
+    );
+    
+    Zeropotent : Type -> Constraint;
+    Zeropotent a = GroupLike a => (
+        zeropotent : forall x : a istrue (conjoin
+            ((operate (operate x x) y) = (operate x x))
+            ((operate y (operate x x)) = (operate x x))
+        )
+    );
+    
+    Alternative : Type -> Constraint;
+    Alternative a = GroupLike a => (
+        zeropotent : forall x : a istrue (conjoin
+            ((operate (operate x x) y) = (operate x (operate x y)))
+            ((operate x (operate y y)) = (operate (operate x y) y))
+        )
+    );
+    
+    Associative a = Alternative a => ();
+    
+    #-- TODO: since this has a more complex definition relying on generators
+    #-- PowerAssociative : Type -> Constraint;
+    
+    LeftUnar : Type -> Constraint;
+    LeftUnar a = GroupLike a => (
+        leftUnar : forall x : a, y : a, z : a istrue (operate x y) = (operate x z)
+    );
+    
+    RightUnar : Type -> Constraint;
+    RightUnar a = GroupLike a => (
+        rightUnar : forall x : a, y : a, z : a istrue (operate y x) = (operate z x)
+    );
+    
+    #-- NOTE: not formal names
+    LeftNull : Type -> Constraint;
+    LeftNull = GroupLike a => (
+        leftNull : forall x : a, y : a istrue (operate x y) = x
+    );
+    
+    RightNull : Type -> Constraint;
+    RightNull = GroupLike a => (
+        rightNull : forall x : a, y : a istrue (operate y x) = x
+    );
+    
+    #-- TODO: Null a does not follow from LeftNull a, RightNull a right? since for L and R x y is required to be x
+    #-- whereas here it is not
+    Null : Type -> Constraint;
+    #-- TODO: since all multiplications result in zero, it is associative so it can be a semigroup?
+    Null a = GroupLike a => (
+        null : forall x : a, y : a, u : a, b : a istrue (operate x y) = (operate u v)
+    );
+    
+    #-- unital not included since its meaning is highly ambiguous
+    #-- Unital : Type -> Constraint;
+    
+    LeftCancellative : Type -> Constraint;
+    LeftCancellative a = GroupLike a => (
+        leftCancellative : forall x : a, y : a, z : a istrue (imply
+            (operate x y) = (operate x z)
+            y = z
+        )
+    );
+    
+    RightCancellative : Type -> Constraint;
+    RightCancellative a = GroupLike a => (
+        rightCancellative : forall x : a, y : a, z : a istrue (imply
+            (operate y x) = (operate z x)
+            y = z
+        )
+    );
+    
+    Cancellative : Type -> Constraint;
+    Cancellative a = LeftCancellative a, RightCancellative a => ();
+    
+    #-- Trimedial : Type -> Constraint;
+    
+    #-- Entropic : Type -> Constraint;
+)

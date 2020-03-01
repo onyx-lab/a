@@ -1,0 +1,7 @@
+module Data.Iterable has (
+    class Iterable, show
+) where (
+class Iterable for 'a has (
+    @#
+);
+)

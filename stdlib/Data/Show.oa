@@ -1,0 +1,10 @@
+module Data.Show has (
+    class Show, show
+) where (
+
+import (map, (++), (::)) from Data.List; # is this the right module?
+
+Show for a = (
+    show : 'a -> String
+);
+)

@@ -1,0 +1,18 @@
+module Data.BinaryOperator has (
+    LeftIdentity, RightIdentity, Identity
+) where (
+    RightIdentity : Type -> Type -> Type -> Type;
+    LeftIdentity a b c = (
+        leftIdentity : (a -> b -> c) -> a;
+    );
+    
+    RightIdentity : Type -> Type -> Type -> Type;
+    RightIdentity a b c = (
+        rightIdentity : (a -> b -> c) -> b
+    );
+    
+    Identity : Type -> Type -> Type;
+    Identity a b = (
+        identity : (a -> a -> b) -> a
+    )
+)

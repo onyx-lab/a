@@ -1,0 +1,20 @@
+module Primitive.Integer has (
+    Integer
+) where (
+import Data.Show;
+import Primitive.String;
+
+Show for Integer = (
+    show 0 = '0';
+    show 1 = '1';
+    show 2 = '2';
+    show 3 = '3';
+    show 4 = '4';
+    show 5 = '5';
+    show 6 = '6';
+    show 7 = '7';
+    show 8 = '8';
+    show 9 = '9';
+    show n = show (n / 10) ++ show (n % 10)
+);
+)

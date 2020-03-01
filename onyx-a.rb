@@ -1,3 +1,19 @@
+require_relative './scope.rb'
+require_relative './oop.rb'
+
+PREC_ARROW = {
+    :left => [
+        [[/\G/,], ->(l, r) { ->(s) { FunctionType.new(l.(s), r.(s)) } }]
+    ],
+    :tighter => [:literal]
+}
+
+PREC_FN = {
+    :left => [
+        [[/\G/,], ->(l, r) { ->(s) { l.(s).(r.(s)) } }]
+    ]
+}
+
 PREC_EXPR = {
     :closed => [
         [[/\G\(/, /\G\)/,], -> (i) { -> (s) { i.(s) } }]
@@ -49,7 +65,7 @@ PREC_FLOW = {
 
 PREC_TOP = PREC_FLOW
 
-PRECS = [PREC_FLOW, PREC_SEPARATOR, PREC_OR, PREC_AND, PREC_PLUS, PREC_TIMES, PREC_EXPR]
+PRECS = [PREC_FLOW, PREC_SEPARATOR, PREC_OR, PREC_AND, PREC_PLUS, PREC_TIMES, PREC_EXPR, PREC_FN]
 PRECS.each_with_index {|prec, i|
     prec[:tighter] = PRECS[(i + 1)..] + [:literal]
 }
@@ -211,10 +227,10 @@ class Parser
         decimal || integer || string || boolean
     end
     
-    def decimal; (result = result.to_f; -> (s) { result }) if result = eat(/\G\d+\.\d+/) end
-    def integer; (result = result.to_i; -> (s) { result }) if result = eat(/\G\d+/) end
-    def string; (result = result.undump; -> (s) { result }) if result = eat(/\G'(?:[^']|\\[\\'nt])'/) end
-    def boolean; (result = result == 'true'; -> (s) { result }) if result = eat(/\G\btrue\b|\G\bfalse\b/)  end
+    def decimal; (result = TYPES[:floating_point].new result.to_f; -> (s) { result }) if result = eat(/\G\d+\.\d+/) end
+    def integer; (result = TYPES[:integer].new result.to_i; -> (s) { result }) if result = eat(/\G\d+/) end
+    def string; (result = TYPES[:string].new result.undump; -> (s) { result }) if result = eat(/\G'(?:[^']|\\[\\'nt])'/) end
+    def boolean; (result = TYPES[:boolean].new result == 'true'; -> (s) { result }) if result = eat(/\G\btrue\b|\G\bfalse\b/)  end
     
     def parse(prec=PREC_TOP)
         expr = p_expr(prec)
@@ -223,26 +239,6 @@ class Parser
         tighter.lazy.map {|tighter_node|
             parse tighter_node
         }.find &:itself
-    end
-end
-
-class Scope
-    def initialize(parent=nil, lookup=nil)
-        @parent = parent
-        @lookup = lookup
-    end
-    
-    def [](key)
-        result = parent[key]
-        return result == nil ? parent[key] : lookup[key]
-    end
-    
-    def []=(key, value)
-        if parent[key] != nil then
-            parent[key] = value
-        else
-            lookup[key] = value
-        end
     end
 end
 

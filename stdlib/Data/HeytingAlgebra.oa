@@ -1,0 +1,15 @@
+module Data.HeytingAlgebra has (
+    HeytingAlgebra
+) where (
+    import Data.BinaryOperator;
+
+    HeytingAlgebra for a = (
+        conjoin : a -> a -> a;
+        conjoinIdentity : a;
+        disjoin : a -> a -> a;
+        disjoinIdentity : a;
+        identity disjoin : a;
+        #-- note that imply is not something you do to two variables
+        imply : a -> a -> a
+    )
+)

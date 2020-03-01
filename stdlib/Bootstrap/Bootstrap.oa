@@ -1,0 +1,11 @@
+#-- module_has_, _of_ and _,_ must be in interpreter since _,_ is not valid (well, easy to read) syntax
+#-- _:_ as well because language should not have any info about type inference
+#-- _of_ is need to declare every type
+module Bootstrap has (
+    _:_
+) where (
+
+_:_ -> Value -> Type -> Constraint;
+
+Instance = List of TypedValue; #-- inside the language everything already has a type. wat
+)

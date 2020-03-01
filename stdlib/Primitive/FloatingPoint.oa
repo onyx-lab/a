@@ -1,0 +1,7 @@
+module Primitive.FloatingPoint has (
+    FloatingPoint
+) where (
+import Data.Show;
+import Primitive.String;
+
+)

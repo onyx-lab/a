@@ -1,0 +1,18 @@
+module Iterable.LinkedList has (
+    String
+) where (
+import Data.Show;
+import Primitive.String;
+
+data LinkedList a = Tail | Node of a, LinkedList;
+
+# forall then???
+_showInner : Show for a => List of a -> String;
+_showInner Tail = '';
+_showInner c :: Tail = show c;
+_showInner head::tail = show head ++ ', ' ++ _showInner tail;
+
+Show for (LinkedList of a) = Show for a => (
+    show ns = '[' ++ _showInner a ++ ']'
+)
+)

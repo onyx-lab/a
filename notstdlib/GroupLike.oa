@@ -1,0 +1,71 @@
+module Data.GroupLike has (
+    GroupLike,
+    Total, Associative, HasIdentity, Invertible, Commutative
+) where (
+    GroupLike : Type -> Constraint;
+    GroupLike a = (
+        #-- TODO: naming
+        operate : a -> a -> a
+    );
+    
+    Total : Type -> Constraint;
+    Total a = GroupLike a => ();
+    
+    Associative : Type -> Constraint;
+    Associative a = GroupLike a => ();
+    
+    HasLeftIdentity : Type -> Constraint;
+    HasLeftIdentity a = GroupLike a => (
+        hasLeftIdentity : forall x : a istrue (operate x identity) = x
+    );
+    
+    HasRightIdentity : Type -> Constraint;
+    HasRightIdentity a = GroupLike a => (
+        hasRightIdentity : forall x : a istrue (operate identity x) = x
+    );
+    
+    HasIdentity : Type -> Constraint;
+    HasIdentity a = HasLeftIdentity a, HasRightIdentity a => (
+        identity : a = leftIdentity = rightIdentity;
+        hasIdentity : conjoin hasLeftIdentity hasRightIdentity
+    );
+    
+    Invertible : Type -> Constraint;
+    Invertible a = GroupLike a => (
+        invert : a -> a
+    );
+    
+    Closed : Type -> Constraint;
+    Closed = Total;
+    
+    #-- TODO: typeclass isn't a type so it doesn't make sense for function declaration
+    #-- especially function declaration inside a typeclass
+    Semigroupoid : Type -> Constraint;
+    Semigroupoid a = Associative a => ();
+    SmallCategory : Type -> Constraint;
+    SmallCategory a = Semigroupoid a, HasIdentity a => ();
+    Groupoid : Type -> Constraint;
+    Groupoid a = SmallCategory a, Invertible a => ();
+    
+    Magma : Type -> Constraint;
+    Magma a = Total a => ();
+    Quasigroup : Type -> Constraint;
+    Quasigroup a = Magma a, Invertible a => ();
+    UnitalMagma : Type -> Constraint;
+    UnitalMagma a = Magma a, HasIdentity a => ();
+    Loop : Type -> Constraint;
+    Loop a = Quasigroup a, UnitalMagma a => ();
+    
+    Semigroup : Type -> Constraint;
+    Semigroup a = Semigroupoid a, Quasigroup a => ();
+    InverseSemigroup : Type -> Constraint;
+    InverseSemigroup a = Semigroup a, Invertible a => ();
+    Monoid : Type -> Constraint;
+    Monoid a : SmallCategory a, UnitalMagma a, Semigroup a => ();
+    CommutativeMonoid : Type -> Constraint;
+    CommutativeMonoid a : Monoid a, Commutative a => ();
+    Group : Type -> Constraint;
+    Group a : Groupoid a, Quasigroup a, Loop a, InverseSemigroup a, Monoid a => ();
+    AbelianGroup : Type -> Constraint;
+    AbelianGroup a : Group a, CommutativeMonoid a, Commutative a => ()
+)
