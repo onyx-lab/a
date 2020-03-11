@@ -1,10 +1,19 @@
-PREC_EXPR = {
+PREC_CLOSED = {
     :closed => [
         [[/\G\(/, /\G\)/,], -> (i) { -> (s) { i.(s) } }]
     ],
+}
+
+PREC_CALL = {
+    :left => [
+        [[/\G/,], ->(l, r) { ->(s) { l.(s).(r.(s)) } }]
+    ],
+}
+
+PREC_POWER = {
     :right => [
         [[/\G\*\*/,], -> (l, r) { ->(s) { l.(s) ** r.(s) } }]
-    ]
+    ],
 }
 
 PREC_TIMES = {
@@ -12,33 +21,33 @@ PREC_TIMES = {
         [[/\G\*/,], -> (l, r) { -> (s) { l.(s) * r.(s) } }],
         [[/\G\//,], -> (l, r) { -> (s) { l.(s) / r.(s) } }],
         [[/\G%/,], -> (l, r) { -> (s) { l.(s) % r.(s) } }],
-    ]
+    ],
 }
 
 PREC_PLUS = {
     :left => [
         [[/\G\+/,], -> (l, r) { -> (s) { l.(s) + r.(s) } }],
         [[/\G-/,], -> (l, r) { -> (s) { l.(s) - r.(s) } }],
-    ]
+    ],
 }
 
 PREC_AND = {
     :left => [
         [[/\G&&/,], -> (l, r) { -> (s) { l.(s) && r.(s) } }],
-    ]
+    ],
 }
 
 PREC_OR = {
     :left => [
         [[/\G\|\|/,], -> (l, r) { -> (s) { l.(s) || r.(s) } }],
-    ]
+    ],
 }
 
 PREC_SEPARATOR = {
     :right => [
         [[/\G,/,], -> (l, r) { -> (s) { [l.(s), r.(s)] } }],
         [[/\G;/,], -> (l, r) { -> (s) { l.(s); r.(s) } }],
-    ]
+    ],
 }
 
 PREC_FLOW = {
@@ -49,7 +58,7 @@ PREC_FLOW = {
 
 PREC_TOP = PREC_FLOW
 
-PRECS = [PREC_FLOW, PREC_SEPARATOR, PREC_OR, PREC_AND, PREC_PLUS, PREC_TIMES, PREC_EXPR]
+PRECS = [PREC_FLOW, PREC_SEPARATOR, PREC_OR, PREC_AND, PREC_PLUS, PREC_TIMES, PREC_POWER, PREC_CALL, PREC_CLOSED]
 PRECS.each_with_index {|prec, i|
     prec[:tighter] = PRECS[(i + 1)..] + [:literal]
 }
@@ -208,13 +217,18 @@ class Parser
     include ExpressionParser
     
     def literal
-        decimal || integer || string || boolean
+        result = decimal || integer || string
+        return result if result
+        result = boolean
+        return result if result != nil
+        ident
     end
     
     def decimal; (result = result.to_f; -> (s) { result }) if result = eat(/\G\d+\.\d+/) end
     def integer; (result = result.to_i; -> (s) { result }) if result = eat(/\G\d+/) end
     def string; (result = result.undump; -> (s) { result }) if result = eat(/\G'(?:[^']|\\[\\'nt])'/) end
-    def boolean; (result = result == 'true'; -> (s) { result }) if result = eat(/\G\btrue\b|\G\bfalse\b/)  end
+    def boolean; (result = result == 'true'; -> (s) { result }) if result = eat(/\G\btrue\b|\G\bfalse\b/) end
+    def ident; (result = result.to_sym; -> (s) { s[result] }) if result = eat(/\G\w+|\G\S*_(\S+_)*\S*/) end
     
     def parse(prec=PREC_TOP)
         expr = p_expr(prec)
@@ -228,25 +242,33 @@ end
 
 class Scope
     def initialize(parent=nil, lookup=nil)
-        @parent = parent
-        @lookup = lookup
+        @parent = parent || {}
+        @lookup = lookup || {}
     end
     
     def [](key)
-        result = parent[key]
-        return result == nil ? parent[key] : lookup[key]
+        result = @lookup[key]
+        return result != nil ? @lookup[key] : @parent[key]
     end
     
     def []=(key, value)
-        if parent[key] != nil then
-            parent[key] = value
+        if @lookup[key] != nil || @parent[key] == nil then
+            @lookup[key] = value
         else
-            lookup[key] = value
+            @parent[key] = value
         end
     end
 end
 
-parser = Parser.new("(if true then 10 * (2 ** 3) else 123); 2; 3") #"1 ** 2 ** 3")
-parse = parser.parse
-p parse
-p parse.(Scope.new)
+DEFAULT_SCOPE = Scope.new
+DEFAULT_SCOPE[:print] = ->(o) { puts o }
+DEFAULT_SCOPE[:add] = ->(a) { ->(b) { a + b }  }
+
+# if true then 10 * (2 ** 3) else 123); 2; 3
+do_trace = false
+trace = TracePoint.new(:b_call) { |tp| puts "lambda at #{tp.method_id} (#{tp.path}:#{tp.lineno})" } if do_trace
+parse = Parser.new(ARGF.read).parse
+scope = Scope.new(DEFAULT_SCOPE)
+trace.enable if do_trace
+p parse.(scope)
+trace.disable if do_trace
